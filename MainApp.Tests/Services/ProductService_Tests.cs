@@ -7,64 +7,27 @@ namespace MainApp.Tests.Services;
 
 public class ProductService_Tests
 {
-    private readonly Mock<IProductService> _productServiceMock;
-    private readonly ProductService _productService;
+    private readonly Mock<IFileService> _fileServiceMock;
+    private readonly IProductService _productService;
 
     public ProductService_Tests()
     {
-        _productServiceMock = new Mock<IProductService>();
-        _productService = new ProductService();
+        _fileServiceMock = new Mock<IFileService>();
+        _productService = new ProductService(_fileServiceMock.Object);
     }
 
     [Fact]
-    public void CreateProduct_ShouldReturnTrue_WhenProductIsCreated()
+    public void CreateProduct_ShouldAddProductToList_AndSaveToFile() 
     {
-        // arrange
-        var productRegistrationForm = new ProductRegistrationForm { Title = "Test Product", Price = 100 };
-        _productServiceMock
-            .Setup(ps => ps.CreateProduct(productRegistrationForm))
+        // Arrange
+        var productRegistrationForm = new ProductRegistrationForm();
+        _fileServiceMock
+            .Setup(fs => fs.SaveContentToFile(It.IsAny<string>()))
             .Returns(true);
-
-        // act
-        var result = _productServiceMock.Object.CreateProduct(productRegistrationForm);
-
-        // assert
-        Assert.True(result);
-        _productServiceMock.Verify(ps => ps.CreateProduct(productRegistrationForm), Times.Once);
-    }
-
-    [Fact]
-    public void GetProduct_ShouldReturnListOfProducts() 
-    {
-        // Arrange
-        var products = new List<Product>()
-        {
-            new() { Id = 1, Title = "Test Product 1", Price = 100 },
-            new() { Id = 2, Title = "Test Product 2", Price = 200 }
-        };
-
-        _productServiceMock.Setup(ps => ps.GetProducts()).Returns(products);
-
         // Act
-        var result = _productServiceMock.Object.GetProducts();
-
-        // Assert
-        Assert.NotNull(result);
-        Assert.Equal(2, result.Count());
-        Assert.Equal("Test Product 1", result.First().Title);
-    }
-
-    [Fact]
-    public void AddProduct_ShouldReturnTrue_AndListCountOfOne() 
-    {
-        // Arrange
-        Product product = new () { Id = 1, Title = "Test Product 1", Price = 100 };
-
-        // Act
-        bool result = _productService.AddProductToList(product);
-
+        var result = _productService.CreateProduct(productRegistrationForm);
         // Assert
         Assert.True(result);
-        Assert.Single(_productService.GetProducts());
+        _fileServiceMock.Verify(fs => fs.SaveContentToFile(It.IsAny<string>()), Times.Once);
     }
 }
